@@ -1,0 +1,17 @@
+{
+  "name": "en-zh-context-aligner",
+  "version": "1.1.0",
+  "category": "Translation / Language Learning",
+  "description": "Default English-to-Chinese translation assistant for anti-translationese rewriting: unpack English structure, decode cultural and technical subtext, route tone by domain, and produce vivid scene-native Chinese.",
+  "entry": "SKILL.md",
+  "compat": [
+    "codex",
+    "codex-cli",
+    "claude-code",
+    "claude-ai",
+    "cursor",
+    "hermes",
+    "openclaw",
+    "opencode"
+  ]
+}

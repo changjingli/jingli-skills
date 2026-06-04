@@ -46,6 +46,7 @@ async function listSkillDirs() {
 async function validateSkill(dirName) {
   const skillPath = path.join(skillsDir, dirName);
   const skillMdPath = path.join(skillPath, "SKILL.md");
+  const manifestPath = path.join(skillPath, "manifest.json");
   const errors = [];
 
   if (!namePattern.test(dirName)) {
@@ -82,6 +83,31 @@ async function validateSkill(dirName) {
     errors.push("frontmatter.description must be 1024 characters or fewer");
   } else if (frontmatter.description.includes("<") || frontmatter.description.includes(">")) {
     errors.push("frontmatter.description cannot contain angle brackets");
+  }
+
+  try {
+    const manifestRaw = await readFile(manifestPath, "utf8");
+    const manifest = JSON.parse(manifestRaw);
+
+    if (manifest.name !== dirName) {
+      errors.push(`manifest.name must match folder name (${dirName})`);
+    }
+
+    if (manifest.entry && manifest.entry !== "SKILL.md") {
+      errors.push("manifest.entry must be SKILL.md when present");
+    }
+
+    if (manifest.compat !== undefined) {
+      if (!Array.isArray(manifest.compat) || manifest.compat.length === 0) {
+        errors.push("manifest.compat must be a non-empty array when present");
+      } else if (manifest.compat.some((item) => typeof item !== "string" || item.trim() === "")) {
+        errors.push("manifest.compat entries must be non-empty strings");
+      }
+    }
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      errors.push(`invalid manifest.json: ${error.message}`);
+    }
   }
 
   return errors;

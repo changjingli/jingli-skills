@@ -1,0 +1,17 @@
+{
+  "name": "skill-repo-maintainer",
+  "version": "1.0.0",
+  "category": "Repository Maintenance",
+  "description": "Maintain a portable repository of AI agent skills, including adding skills, validating metadata, and keeping docs aligned.",
+  "entry": "SKILL.md",
+  "compat": [
+    "codex",
+    "codex-cli",
+    "claude-code",
+    "claude-ai",
+    "cursor",
+    "hermes",
+    "openclaw",
+    "opencode"
+  ]
+}

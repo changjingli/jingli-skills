@@ -1,13 +1,15 @@
 # Skills
 
-This repository is a home for personal Codex skills: small, reusable workflows that teach an AI agent how to do a specific job in your preferred way.
+This repository is a home for personal multi-agent skills: small, reusable workflows that teach an AI agent how to do a specific job in your preferred way.
 
-It is structured like a lightweight open-source skill collection. Each skill lives in its own folder under `skills/` and contains a required `SKILL.md`.
+It is structured like a lightweight open-source skill collection. Each skill lives in its own folder under `skills/` and contains a required `SKILL.md`. Client-specific files are thin adapters around that shared source.
 
 ## Repository Layout
 
 ```text
 .
+├── AGENTS.md
+├── CLAUDE.md -> AGENTS.md
 ├── .codex-plugin/
 │   └── plugin.json
 ├── .github/
@@ -18,9 +20,15 @@ It is structured like a lightweight open-source skill collection. Each skill liv
 └── skills/
     ├── skill-repo-maintainer/
     │   ├── SKILL.md
+    │   ├── manifest.json
     │   └── agents/openai.yaml
-    └── prompt-polisher/
+    ├── prompt-polisher/
+    │   ├── SKILL.md
+    │   ├── manifest.json
+    │   └── agents/openai.yaml
+    └── en-zh-context-aligner/
         ├── SKILL.md
+        ├── manifest.json
         └── agents/openai.yaml
 ```
 
@@ -51,6 +59,17 @@ description: Use when the user wants ...
 
 Good skill descriptions are specific about when the skill should trigger. The body should stay concise and move long references, scripts, or assets into subfolders only when they are genuinely useful.
 
+## Multi-Agent Compatibility
+
+`SKILL.md` is the portable source of truth. Keep the workflow there so Codex, Claude Code, Claude AI, Cursor, Hermes, OpenClaw, and other Markdown-reading agents can share the same behavior.
+
+Optional adapter files:
+
+- `agents/openai.yaml`: OpenAI/Codex UI metadata.
+- `manifest.json`: cross-agent discovery metadata, including `compat`.
+- `AGENTS.md`: repository-level guidance for generic agents.
+- `CLAUDE.md`: symlink to `AGENTS.md` for Claude-style agents.
+
 ## Validate
 
 Run:
@@ -75,6 +94,16 @@ If you prefer symlinks while editing:
 ```bash
 ln -s "$PWD/skills/my-skill" ~/.codex/skills/my-skill
 ```
+
+For Claude and Cursor, use the same `skills/<skill-name>/SKILL.md` folders:
+
+```bash
+mkdir -p ~/.claude/skills ~/.cursor/skills
+cp -R skills/* ~/.claude/skills/
+cp -R skills/* ~/.cursor/skills/
+```
+
+For frameworks such as Hermes, OpenClaw, or cc-switch style launchers, point the launcher at this repository's `skills/` directory or copy the same folders into that framework's skills directory. The skill behavior should stay in `SKILL.md`; only add a new adapter file when the framework requires one.
 
 ## Publish To GitHub
 

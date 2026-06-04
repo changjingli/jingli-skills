@@ -1,0 +1,17 @@
+{
+  "name": "prompt-polisher",
+  "version": "1.0.0",
+  "category": "Writing / Prompting",
+  "description": "Turn rough requests, agent instructions, system prompts, and workflow notes into clearer prompts while preserving intent and voice.",
+  "entry": "SKILL.md",
+  "compat": [
+    "codex",
+    "codex-cli",
+    "claude-code",
+    "claude-ai",
+    "cursor",
+    "hermes",
+    "openclaw",
+    "opencode"
+  ]
+}
