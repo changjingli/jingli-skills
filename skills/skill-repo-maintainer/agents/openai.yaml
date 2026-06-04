@@ -1,0 +1,6 @@
+interface:
+  display_name: "Skill Repo Maintainer"
+  short_description: "Maintain a Codex skill collection"
+  default_prompt: "Use $skill-repo-maintainer to add or review a skill in this repository."
+policy:
+  allow_implicit_invocation: true

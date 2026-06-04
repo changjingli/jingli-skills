@@ -1,0 +1,17 @@
+{
+  "name": "skills",
+  "version": "0.1.0",
+  "private": false,
+  "description": "A personal open-source collection of Codex skills.",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-skills.mjs"
+  },
+  "keywords": [
+    "codex",
+    "skills",
+    "ai",
+    "agents"
+  ],
+  "license": "MIT"
+}

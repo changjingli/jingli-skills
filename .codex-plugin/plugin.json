@@ -1,0 +1,34 @@
+{
+  "name": "skills",
+  "version": "0.1.0",
+  "description": "A personal open-source collection of reusable Codex skills.",
+  "author": {
+    "name": "Personal"
+  },
+  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/skills",
+  "repository": "https://github.com/YOUR_GITHUB_USERNAME/skills",
+  "license": "MIT",
+  "keywords": [
+    "codex",
+    "skills",
+    "personal-workflows"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Personal Skills",
+    "shortDescription": "Reusable personal workflows for Codex",
+    "longDescription": "Personal Skills is an open collection of reusable Codex skills for everyday writing, coding, review, and repository maintenance workflows.",
+    "developerName": "Personal",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/YOUR_GITHUB_USERNAME/skills",
+    "defaultPrompt": [
+      "Use my personal skills to help with this workflow."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
