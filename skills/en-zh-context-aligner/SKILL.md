@@ -37,11 +37,13 @@ Route English text from surface wording to Chinese emotion and scene. Grammar an
 - Negation transformation: For extreme quantity phrases such as `0 lines of...`, `zero-something`, or `not a single...`, do not mechanically render `0` or `zero`. Convert them into Chinese with emotional force, such as `没写过一行`, `完全没动过`, `一丁点都没有`, or `没有一个是...`.
 - Cultural decoding: For culturally loaded words such as `ambitious`, `boil the ocean`, `moonshot`, `scrappy`, or Silicon Valley-style product language, restore the local subtext: `想干大事`, `敢破局`, `不甘平庸`, `摊子铺太大`, `小团队硬打`.
 - Technical calibration: If the source has a technical or factual ambiguity, identify it in the breakdown and correct the translation from a domain-aware perspective. Accuracy comes before elegance.
+- Terminology consistency: Within the same passage or article, maintain one Chinese rendering for each key term unless context genuinely changes. Once a term is chosen, reuse it; if changing it improves accuracy, say why.
 - Hook-first Chinese: If English hides the strongest hook in a trailing `with`, `by`, `using`, or `without` phrase, move that hook to the front in Chinese when it is the natural selling point or emotional center.
 
 ## Required References
 
 - For tone routing and freedom boundaries, use `references/domain-tone-guide.md`.
+- For default technical and product terminology, use `references/terminology-guide.md`.
 - For taste calibration, use `references/bad-good-examples.md`.
 - For self-review, use `references/evaluation-rubric.md`.
 - Before finalizing reusable examples or checking an output draft, run `scripts/pre-flight-check.py` when practical.
@@ -56,6 +58,7 @@ For each English passage, follow these three steps.
 - Identify the main skeleton: subject, verb, object, or complement.
 - Explain the nesting order: whether Chinese should read from back to front, keep the English flow, or split into short clauses.
 - If the English contains a technical or logical issue, call it out briefly and calibrate the intended meaning before translating.
+- For multi-sentence passages, build a small working terminology map from `references/terminology-guide.md` plus the source text. Keep it in mind throughout the answer; surface it only when it helps the user.
 - Keep this step concise. It should remove parsing friction, not become a grammar lecture.
 
 ### 2. 意象对齐
@@ -80,6 +83,8 @@ Use Chinese labels by default:
 ```text
 一、源码重构
 [主干骨架、括号套娃、阅读顺序、必要的技术/事实校准]
+
+术语锚点：[仅在长文或术语较多时列出关键 English -> 中文译法]
 
 二、意象对齐
 | 核心块 | 字面平淡意 | 中文神会平替 |

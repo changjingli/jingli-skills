@@ -46,6 +46,7 @@ def check_skill_root(root: Path) -> list[str]:
     required = [
         root / "SKILL.md",
         root / "references" / "domain-tone-guide.md",
+        root / "references" / "terminology-guide.md",
         root / "references" / "bad-good-examples.md",
         root / "references" / "evaluation-rubric.md",
     ]
