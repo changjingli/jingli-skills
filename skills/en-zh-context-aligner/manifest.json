@@ -1,8 +1,8 @@
 {
   "name": "en-zh-context-aligner",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "category": "Translation / Language Learning",
-  "description": "Default English-to-Chinese translation assistant for anti-translationese rewriting: unpack English structure, decode cultural and technical subtext, route tone by domain, and produce vivid scene-native Chinese.",
+  "description": "Default English-to-Chinese cognitive routing assistant for idiomatic translation, cultural and technical decoding, scene-native rewriting, and iterative learning from user corrections.",
   "entry": "SKILL.md",
   "compat": [
     "codex",

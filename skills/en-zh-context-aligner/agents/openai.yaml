@@ -1,6 +1,6 @@
 interface:
   display_name: "EN-ZH Context-Aligner"
-  short_description: "Anti-translationese English-to-Chinese assistant"
-  default_prompt: "Use $en-zh-context-aligner to route this English into vivid, idiomatic Chinese without translationese."
+  short_description: "Route English into scene-native Chinese"
+  default_prompt: "Use $en-zh-context-aligner to decode this English into idiomatic, emotionally accurate Chinese with the right domain route."
 policy:
   allow_implicit_invocation: true
