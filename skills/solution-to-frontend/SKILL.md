@@ -71,7 +71,7 @@ When a review fails, classify the failure and return to its owning stage:
 Compose available specialist skills instead of duplicating them:
 
 - use KPI/data-analysis skills for metric definitions and validation;
-- use Impeccable or equivalent design skills for visual shaping, critique, extraction, and polish;
+- use the bundled [design-authority bootstrap](references/design-authority-bootstrap.md) when no approved design authority exists; use external design skills only when available and useful for visual shaping, critique, extraction, or polish;
 - use Superpowers or equivalent engineering skills for plans, TDD, debugging, and verification;
 - use platform QA and deployment skills for target-runtime evidence.
 

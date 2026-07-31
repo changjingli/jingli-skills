@@ -6,6 +6,8 @@ Use this stage after product content is approved. Decide how the confirmed conte
 
 Inspect existing brand/design systems, incumbent UI, references explicitly selected by the user, target devices, viewing distance, input methods, accessibility needs, and content ranges.
 
+Do not assume `DESIGN.md` exists. If no approved design authority is found, first load [design-authority-bootstrap.md](design-authority-bootstrap.md). It determines whether to document an incumbent visual world, establish a greenfield one, or replace an existing one with explicit approval. Do not treat a missing file as proof that the project is greenfield.
+
 Translate subjective direction into executable decisions:
 
 - information hierarchy and reading order;
