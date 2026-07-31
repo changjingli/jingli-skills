@@ -1,0 +1,6 @@
+interface:
+  display_name: "Solution to Frontend"
+  short_description: "Turn solution materials into validated frontend delivery"
+  default_prompt: "Use $solution-to-frontend to turn the current solution materials into a staged, validated frontend delivery."
+policy:
+  allow_implicit_invocation: true

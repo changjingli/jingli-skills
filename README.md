@@ -26,10 +26,15 @@ It is structured like a lightweight open-source skill collection. Each skill liv
     │   ├── SKILL.md
     │   ├── manifest.json
     │   └── agents/openai.yaml
-    └── en-zh-context-aligner/
+    ├── en-zh-context-aligner/
         ├── SKILL.md
         ├── manifest.json
         └── agents/openai.yaml
+    └── solution-to-frontend/
+        ├── SKILL.md
+        ├── manifest.json
+        ├── agents/openai.yaml
+        └── references/
 ```
 
 ## Add A Skill

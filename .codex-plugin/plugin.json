@@ -17,7 +17,7 @@
   "interface": {
     "displayName": "Personal Skills",
     "shortDescription": "Reusable personal workflows for Codex",
-    "longDescription": "Personal Skills is an open collection of reusable Codex skills for everyday writing, coding, review, and repository maintenance workflows.",
+    "longDescription": "Personal Skills is an open collection of reusable Codex skills for writing, coding, review, repository maintenance, and staged product-to-frontend delivery workflows.",
     "developerName": "Personal",
     "category": "Productivity",
     "capabilities": [
