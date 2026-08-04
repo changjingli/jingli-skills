@@ -1,15 +1,15 @@
 ---
 name: solution-to-frontend
-description: Use when turning pre-sales proposals, solution documents, business diagrams, KPI lists, reference images, or loosely defined customer needs into a frontend product, representative prototype, multi-page implementation, or production delivery.
+description: Use when turning pre-sales proposals, solution documents, business diagrams, KPI lists, reference images, or loosely defined customer needs into a customer-reviewable static high-fidelity frontend V0 that can later be reused by engineering.
 ---
 
 # Solution to Frontend
 
 ## Overview
 
-Convert ambiguous solution material into validated frontend delivery from the top down.
+Convert ambiguous solution material into a validated, customer-reviewable static high-fidelity frontend V0 from the top down.
 
-**Core principle:** Team size and AI leverage may change; professional responsibilities and approval gates do not disappear.
+**Core principle:** A V0 is not production delivery, but it must be engineered so customer-approved structure, components, content, and interaction expectations can survive into production development.
 
 ## Project Isolation
 
@@ -27,12 +27,14 @@ Respect existing project conventions. When none exist, use `docs/solution-to-fro
 4. Before creating or updating a project artifact, load [references/project-artifacts.md](references/project-artifacts.md).
 5. Load only the reference for the active stage.
 
+When no established frontend stack is evidenced, load [references/technical-baseline.md](references/technical-baseline.md) during intake and before the first implementation change. Record the selected baseline and any justified deviation in the active project artifact.
+
 | Stage | Load | Required result |
 |---|---|---|
 | Intake and outcome | [references/intake-outcome.md](references/intake-outcome.md) | Confirmed value goal, audience, scope, facts, assumptions |
 | Product content | [references/content-design.md](references/content-design.md) | Screen/flow content, data semantics, states, acceptance criteria |
 | Visual baseline and V0 | [references/visual-v0.md](references/visual-v0.md) | Approved visual direction and representative runnable slice |
-| Scale and delivery | [references/scale-delivery.md](references/scale-delivery.md) | Reusable system, complete implementation, production evidence |
+| Scale and delivery | [references/scale-delivery.md](references/scale-delivery.md) | Reusable static prototype, review evidence, productionization handoff |
 
 For the full journey, proceed stage by stage and stop at each approval gate. For one stage, verify upstream inputs and stay within scope.
 
@@ -42,10 +44,10 @@ For the full journey, proceed stage by stage and stop at each approval gate. For
 No confirmed value goal  -> no screen inventory
 No approved content      -> no visual production
 No approved V0           -> no multi-screen replication
-No target-runtime proof  -> no delivery-complete claim
+No review-runtime proof  -> no customer-reviewable V0 claim
 ```
 
-Only the user or named accountable stakeholder may approve value, content, visual direction, V0, or release. AI may gather evidence and recommend; it must not approve itself.
+Only the user or named accountable stakeholder may approve value, content, visual direction, V0, or customer-review readiness. AI may gather evidence and recommend; it must not approve itself.
 
 ## Approval Protocol
 
@@ -64,7 +66,7 @@ When a review fails, classify the failure and return to its owning stage:
 - wrong goal or scope -> intake and outcome;
 - wrong content, metric, state, or workflow -> product content;
 - wrong hierarchy, interaction, or visual language -> visual baseline;
-- implementation, integration, performance, or runtime defect -> engineering/delivery.
+- implementation, review-runtime, performance, or reuse defect -> engineering/delivery.
 
 ## Composition
 
@@ -73,7 +75,7 @@ Compose available specialist skills instead of duplicating them:
 - use KPI/data-analysis skills for metric definitions and validation;
 - use the bundled [design-authority bootstrap](references/design-authority-bootstrap.md) when no approved design authority exists; use external design skills only when available and useful for visual shaping, critique, extraction, or polish;
 - use Superpowers or equivalent engineering skills for plans, TDD, debugging, and verification;
-- use platform QA and deployment skills for target-runtime evidence.
+- use platform QA and deployment skills for review-runtime evidence when a hosted or shared preview is needed.
 
 These tools assist a stage; they never waive its inputs or approval gate.
 
@@ -83,4 +85,6 @@ Report outcomes as an evidence chain:
 
 `source -> decision -> rationale -> artifact -> approval/evidence -> next stage`
 
-Separate confirmed facts, assumptions, examples, and unresolved decisions. Never present a prototype, mock-backed demo, or passing test suite as proof of customer value or production readiness.
+Separate confirmed facts, assumptions, examples, mock/demo behavior, and unresolved decisions. Never present a static V0, mock-backed demo, or passing test suite as production readiness. Instead, state what can be reused directly, what needs API/data integration, and what remains a productionization task.
+
+For a customer-facing V0, include the review package: preview path or URL, review scope, mock/demo disclosure, evidence summary, open decisions, reusable code areas, integration boundaries, and productionization notes.

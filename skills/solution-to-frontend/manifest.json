@@ -2,7 +2,7 @@
   "name": "solution-to-frontend",
   "version": "1.0.0",
   "category": "Product Development / Frontend",
-  "description": "Turn solution materials and ambiguous customer needs into staged, evidence-backed frontend delivery with explicit approval gates.",
+  "description": "Turn solution materials and ambiguous customer needs into staged, evidence-backed static high-fidelity frontend V0s with explicit approval gates.",
   "entry": "SKILL.md",
   "compat": [
     "codex",

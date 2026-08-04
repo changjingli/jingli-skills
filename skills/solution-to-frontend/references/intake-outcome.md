@@ -27,6 +27,7 @@ Resolve only gaps that change the product materially:
 - What measurable or observable outcome makes the work valuable?
 - What is inside the first delivery, explicitly outside it, and deferred?
 - Which customer commitments, regulations, platforms, data sources, or assets are binding?
+- Which target runtime, repository conventions, deployment constraints, and existing frontend dependencies are binding?
 
 Do not ask the user to repeat facts strongly supported by project evidence. Present inferences for confirmation.
 
@@ -39,8 +40,9 @@ Produce:
 3. business outcome and observable success;
 4. scope, non-goals, dependencies, and risks;
 5. evidence classification and open decisions;
-6. candidate screens or flows only after the value goal is confirmed.
+6. selected technical baseline, any deviation, and its rationale when implementation is in scope;
+7. candidate screens or flows only after the value goal is confirmed.
 
 ## Gate
 
-Ask the accountable stakeholder to approve the value goal and scope. Do not infer approval from silence, an existing proposal, or runnable code.
+Ask the accountable stakeholder to approve the value goal and scope. When the selected technical baseline changes hosting, cost, platform support, or a binding customer commitment, include it in the approval request. Do not infer approval from silence, an existing proposal, or runnable code.
