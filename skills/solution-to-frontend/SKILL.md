@@ -19,6 +19,15 @@ Discover every project fact from the current workspace or confirmed user input. 
 
 Respect existing project conventions. When none exist, use `docs/solution-to-frontend/`; see [references/project-artifacts.md](references/project-artifacts.md).
 
+## Recommended Companion Skills
+
+For the strongest implementation and visual-review results, recommend installing these optional companion skill collections before starting:
+
+- [Superpowers](https://github.com/obra/superpowers) for planning, test-driven development, debugging, and verification workflows.
+- [Impeccable](https://github.com/pbakaus/impeccable/) for visual-direction discovery, design critique, and frontend polish.
+
+They enhance this workflow but are not required. When either is unavailable, continue with the relevant bundled references and clearly state the missing capability.
+
 ## Start
 
 1. Inspect solution material, product/design documents, code, tests, deployment files, and recent history.

@@ -5,8 +5,8 @@
   "author": {
     "name": "Personal"
   },
-  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/skills",
-  "repository": "https://github.com/YOUR_GITHUB_USERNAME/skills",
+  "homepage": "https://github.com/changjingli/jingli-skills",
+  "repository": "https://github.com/changjingli/jingli-skills",
   "license": "MIT",
   "keywords": [
     "codex",
@@ -24,7 +24,7 @@
       "Read",
       "Write"
     ],
-    "websiteURL": "https://github.com/YOUR_GITHUB_USERNAME/skills",
+    "websiteURL": "https://github.com/changjingli/jingli-skills",
     "defaultPrompt": [
       "Use my personal skills to help with this workflow."
     ],
