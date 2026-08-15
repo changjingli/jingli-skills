@@ -19,14 +19,25 @@ Discover every project fact from the current workspace or confirmed user input. 
 
 Respect existing project conventions. When none exist, use `docs/solution-to-frontend/`; see [references/project-artifacts.md](references/project-artifacts.md).
 
-## Recommended Companion Skills
+## Companion Skill Orchestration
 
-For the strongest implementation and visual-review results, recommend installing these optional companion skill collections before starting:
+This workflow actively composes the following companion skill collections when they are installed. Do not rely on passive skill discovery or a generic "available and useful" decision:
 
-- [Superpowers](https://github.com/obra/superpowers) for planning, test-driven development, debugging, and verification workflows.
-- [Impeccable](https://github.com/pbakaus/impeccable/) for visual-direction discovery, design critique, and frontend polish.
+- [Superpowers](https://github.com/obra/superpowers)
+- [Impeccable](https://github.com/pbakaus/impeccable/)
 
-They enhance this workflow but are not required. When either is unavailable, continue with the relevant bundled references and clearly state the missing capability.
+Invoke the named skill at its stage trigger and record its output in the active project artifact: normally `03-visual-brief.md` for design-direction evidence, `04-v0.md` for implementation and review evidence, and `06-acceptance.md` for final readiness evidence. If a named skill is not installed, state that fact, use the listed fallback, and mark the resulting evidence as degraded; its absence never grants approval or bypasses a gate.
+
+| Trigger | Direct invocation | Required output | Fallback when unavailable |
+|---|---|---|---|
+| First visual work in a project without Impeccable product context | `impeccable:init` | Captured product context | Complete intake outcome and record the missing Impeccable context |
+| Before implementing the representative V0 slice | `superpowers:writing-plans` | Bounded implementation plan tied to approved content and visual direction | Record the same plan in the active project artifact |
+| Before each new or changed behavior or interaction | `superpowers:test-driven-development` | Failing test, minimal implementation, passing verification | Use the project test convention; state that TDD specialist guidance was unavailable |
+| Runnable V0 ready for visual review | `impeccable:critique`, then `impeccable:audit` | Design findings, detector/browser evidence, remediation decision, and re-review evidence after material fixes | Use `references/visual-v0.md` plus platform QA evidence; mark visual review degraded |
+| A test, review, or runtime check fails | `superpowers:systematic-debugging` | Root cause, corrective change, and regression evidence | Classify and return to the owning stage under Approval Protocol |
+| Before claiming customer-review readiness | `impeccable:polish`, then `superpowers:verification-before-completion` | Final visual findings, fresh verification evidence, and explicit disposition for every material finding | Complete the review package and disclose the unavailable checks |
+
+`impeccable:init` runs once only when its product context is absent. All other invocations run at their stated trigger; they are not deferred because another general-purpose skill happened to load. A material finding must be fixed and re-checked, or explicitly accepted by the accountable stakeholder with its limitation recorded; unresolved findings block a customer-review-ready claim.
 
 ## Start
 
@@ -42,8 +53,8 @@ When no established frontend stack is evidenced, load [references/technical-base
 |---|---|---|
 | Intake and outcome | [references/intake-outcome.md](references/intake-outcome.md) | Confirmed value goal, audience, scope, facts, assumptions |
 | Product content | [references/content-design.md](references/content-design.md) | Screen/flow content, data semantics, states, acceptance criteria |
-| Visual baseline and V0 | [references/visual-v0.md](references/visual-v0.md) | Approved visual direction and representative runnable slice |
-| Scale and delivery | [references/scale-delivery.md](references/scale-delivery.md) | Reusable static prototype, review evidence, productionization handoff |
+| Visual baseline and V0 | [references/visual-v0.md](references/visual-v0.md) and the triggered companion skills above | Approved visual direction, reviewed runnable slice, and companion-skill evidence |
+| Scale and delivery | [references/scale-delivery.md](references/scale-delivery.md) and the triggered companion skills above | Reusable static prototype, final verification evidence, productionization handoff |
 
 For the full journey, proceed stage by stage and stop at each approval gate. For one stage, verify upstream inputs and stay within scope.
 
@@ -79,11 +90,10 @@ When a review fails, classify the failure and return to its owning stage:
 
 ## Composition
 
-Compose available specialist skills instead of duplicating them:
+Compose the required companion skills according to the orchestration table instead of duplicating their methods. Then compose other specialist skills as needed:
 
 - use KPI/data-analysis skills for metric definitions and validation;
-- use the bundled [design-authority bootstrap](references/design-authority-bootstrap.md) when no approved design authority exists; use external design skills only when available and useful for visual shaping, critique, extraction, or polish;
-- use Superpowers or equivalent engineering skills for plans, TDD, debugging, and verification;
+- use the bundled [design-authority bootstrap](references/design-authority-bootstrap.md) when no approved design authority exists;
 - use platform QA and deployment skills for review-runtime evidence when a hosted or shared preview is needed.
 
 These tools assist a stage; they never waive its inputs or approval gate.
