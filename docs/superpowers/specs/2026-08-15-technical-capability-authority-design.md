@@ -1,303 +1,474 @@
-# Technical Capability Authority Design
+# Solution-to-Frontend Evidence-Gated State Machine Design
 
-Status: approved in conversation, awaiting written-spec review
-Date: 2026-08-15
+Status: design direction approved; written revision awaiting review
+Date: 2026-08-17
 Scope: `skills/solution-to-frontend`
 
 ## Problem
 
-The workflow treats `technical-baseline.md` as a fallback for projects without an evidenced frontend stack. This conflates the presence of an application framework or styling tool with a complete, capable frontend architecture.
+The existing workflow lists a sequence of stages and assigns each stage a coarse status. That describes the happy path, but it does not model the events and failure states that determine whether work may safely advance.
 
-A project with Next.js, React, and Tailwind can therefore bypass evaluation of UI primitives, admin workflow components, tables, forms, charts, data adapters, tests, and review runtime. Design brainstorming then starts without an approved implementation boundary and may propose custom components where a mature domain system should have been evaluated.
+In particular, `active`, `awaiting_approval`, `blocked`, `approved`, and `superseded` conflate four different concerns:
 
-The missing concept is not a Pro Components recommendation. It is a first-class technical capability authority between approved content and visual production.
+- the lifecycle of the overall workflow;
+- the execution state of the active stage;
+- the validity and approval state of its artifacts;
+- the state of child agents and companion skills.
+
+This makes a formally compliant but operationally invalid transition possible. A child task can finish, a screenshot can exist, and automated tests can pass while the composed experience has never been reviewed in the target runtime. The process records artifacts but cannot prove that the evidence authorizes the next kind of work.
+
+The missing concept is therefore broader than a Pro Components recommendation or another checklist item. `solution-to-frontend` needs a parent-owned, evidence-gated, recoverable state machine.
+
+## Observed Baseline Failure
+
+A real implementation exposed the baseline behavior before this design change:
+
+- an approved complete back-office experience was decomposed into isolated code modules;
+- host routing, layout, global styles, authentication, and legacy boundaries were discovered late;
+- a mature component system was assembled mechanically without proving the whole operator workflow;
+- adapters, state, tests, and local components were built before the complete static composition was reviewed;
+- isolated tests passed while the target route and full viewport remained invalid;
+- no single owner was accountable for the composed page;
+- artifact and test completion was mistaken for authorization to expand.
+
+These are baseline observations, not reusable project requirements. Literal routes, component products, viewport sizes, and domain semantics belong in project-generated acceptance contracts. The reusable skill must encode the general failure pattern.
 
 ## Outcome
 
-The skill will require an evidence-backed capability architecture for every implemented V0, including projects that already have a framework or CSS system.
+The revised skill will:
 
-The revised stage sequence is:
+- distinguish the happy-path phase sequence from the state machine that governs it;
+- require target-runtime and integration evidence before visual production;
+- require a complete composition proof before behavior and scale work expand;
+- model clarification, rejection, remediation, retry, pause, cancellation, invalidation, recovery, and cleanup failure;
+- keep artifacts, approvals, evidence, and executor runs as separate state dimensions;
+- make the parent orchestrator and an experience integration owner accountable for whole-experience coherence;
+- use Superpowers and Impeccable as bounded child protocols whose completion never advances the parent state by itself.
 
-```text
-Outcome
-  -> Content and workflow requirements
-  -> Technical capability architecture
-  -> Visual direction and reviewable design evidence
-  -> Representative runnable V0
-  -> Scale implementation plan and delivery
-```
+## Happy-Path Phase Sequence
 
-No visual ideation or V0 implementation may begin until the material technical capabilities have an approved `Reuse`, `Adopt`, or `Build` decision. No scale implementation plan may begin until the representative V0 has been reviewed and approved.
-
-## Workflow State and Temporary Progress
-
-The workflow is modeled as a parent-owned state machine:
+The phase sequence remains useful as a map, but it is not the state machine:
 
 ```text
 BOOTSTRAP
   -> INTAKE
   -> CONTENT
-  -> CAPABILITY
+  -> TECHNICAL_BASELINE
   -> VISUAL_DIRECTION
+  -> COMPOSITION_PROOF
   -> REPRESENTATIVE_V0
   -> SCALE_DELIVERY
   -> COMPLETE
 ```
 
-Each stage uses one of these statuses: `active`, `awaiting_approval`, `blocked`, `approved`, or `superseded`. A transition requires all three evidence classes:
+The two boundaries that were previously missing are:
 
-- `Activity`: the stage work was actually performed;
-- `Artifact`: the formal artifact and reviewable evidence exist;
-- `Commitment`: the accountable stakeholder explicitly approved the gate.
+- `TECHNICAL_BASELINE`: prove the target runtime, integration impact, and capability architecture before visual production;
+- `COMPOSITION_PROOF`: prove one complete representative composition in the target runtime before implementing deeper behavior or replicating surfaces.
 
-The transition record is kept in a temporary workspace file, `progress.md`. It is not a formal project artifact and is not a source of truth for product facts or approved decisions. Formal facts and decisions must be promoted into their stage-owned files.
+## Orthogonal State Model
 
-At startup, the orchestrator reads `progress.md` if present, reconciles it against formal artifacts and approvals, and downgrades any progress claim that lacks evidence. A child skill may append a result to the progress record, but only the parent orchestrator may update the current stage or satisfy a gate.
+One status field cannot represent the workflow. `progress.md` records six orthogonal dimensions.
 
-The temporary file contains only:
+| Dimension | States | Purpose |
+|---|---|---|
+| Workflow lifecycle | `NEW`, `BOOTSTRAPPING`, `RECOVERING`, `RUNNING`, `INVALIDATING`, `PAUSED`, `CANCELLING`, `BLOCKED`, `COMPLETING`, `CLEANING_UP`, `CLEANUP_FAILED`, `COMPLETE`, `CANCELLED` | Describes the parent workflow |
+| Stage execution | `WORKING`, `EXECUTOR_RUNNING`, `VERIFYING`, `AWAITING_APPROVAL`, `NEEDS_CLARIFICATION`, `RETRYABLE_FAILED`, `REMEDIATING` | Describes work inside the current phase |
+| Artifact validity | `MISSING`, `DRAFT`, `QUALIFIED`, `SUPERSEDED` | Describes whether each formal artifact is usable against current upstream decisions |
+| Evidence status | `MISSING`, `INCOMPLETE`, `QUALIFIED`, `DEGRADED`, `STALE`, `INVALID` | Describes whether evidence satisfies the active gate |
+| Approval status | `NOT_REQUESTED`, `PENDING`, `GRANTED`, `REJECTED`, `CHANGES_REQUESTED` | Describes the accountable stakeholder's decision against a qualified artifact and evidence set |
+| Executor run | `IDLE`, `RUNNING`, `CANCELLING`, `RETURNED`, `FAILED`, `TIMED_OUT` | Describes each child agent or companion-skill invocation |
 
-- current stage and status;
-- next gate and exact recovery action;
-- missing evidence and blockers;
-- tentative decisions and their promotion targets;
-- child-skill invocations and returned artifacts;
-- invalidated downstream artifacts after an upstream change.
+Approval is recorded against a qualified artifact and evidence set. It is not inferred from the stage execution state or stored as artifact validity. `SUPERSEDED` describes an artifact, not the current workflow lifecycle.
 
-When the workflow reaches `COMPLETE`, the orchestrator first verifies that every tentative decision was promoted or closed, all formal artifacts and approvals are present, and the acceptance package is complete. It then deletes `progress.md`. An interrupted workflow retains it for recovery; it is never deleted merely because a child skill reports completion.
+## Parent Lifecycle State Machine
 
-`progress.md` is created from `assets/progress-template.md`, remains workspace-local during execution, and is not committed as a project artifact.
+```text
+NEW
+  `- workflow.started -> BOOTSTRAPPING
 
-## Gate and Invalidation Rules
+BOOTSTRAPPING
+  |- progress.absent -> RUNNING.INTAKE.WORKING
+  |- progress.found -> RECOVERING
+  `- progress.invalid -> BLOCKED(recovery)
 
-The formal artifacts and minimum transition conditions are:
+RECOVERING
+  |- evidence.reconciled -> RUNNING.<resolved-stage>.<resolved-state>
+  |- evidence.stale -> INVALIDATING
+  |- state.ambiguous -> RUNNING.<owning-stage>.NEEDS_CLARIFICATION
+  `- recovery.failed -> BLOCKED(recovery)
 
-| Stage | Formal artifacts | Transition condition |
+RUNNING
+  |- upstream.changed -> INVALIDATING
+  |- user.paused -> PAUSED
+  |- workflow.cancelled -> CANCELLING
+  |- unrecoverable.blocker -> BLOCKED
+  `- acceptance.approved -> COMPLETING
+
+INVALIDATING
+  |- executors.running -> CANCELLING
+  `- downstream.superseded -> RUNNING.<owning-stage>.REMEDIATING
+
+PAUSED
+  `- workflow.resumed -> RECOVERING
+
+CANCELLING
+  |- executors.stopped + workflow.cancelled -> CANCELLED
+  |- executors.stopped + upstream.changed -> INVALIDATING
+  `- stop.failed -> BLOCKED(cancellation)
+
+BLOCKED
+  |- blocker.resolved -> RECOVERING
+  |- workflow.cancelled -> CANCELLING
+  `- user.paused -> PAUSED
+
+COMPLETING
+  |- formal_state.incomplete -> RUNNING.SCALE_DELIVERY.REMEDIATING
+  |- reconciliation.succeeded -> CLEANING_UP
+  `- reconciliation.failed -> BLOCKED(completion)
+
+CLEANING_UP
+  |- progress.deleted -> COMPLETE
+  `- cleanup.failed -> CLEANUP_FAILED
+
+CLEANUP_FAILED
+  |- cleanup.retried -> CLEANING_UP
+  `- user.paused -> PAUSED
+```
+
+`PAUSED`, `BLOCKED`, and `CANCELLED` retain `progress.md`. Only successful reconciliation and cleanup produce `COMPLETE` and delete the temporary file.
+
+## Stage Sub-State Machine
+
+Every implementation-bound phase uses the same sub-state contract:
+
+```text
+WORKING
+  |- executor.dispatched -> EXECUTOR_RUNNING
+  |- activity.completed -> VERIFYING
+  |- meaning.ambiguous -> NEEDS_CLARIFICATION
+  `- work.failed -> RETRYABLE_FAILED
+
+EXECUTOR_RUNNING
+  |- executor.returned -> VERIFYING
+  |- executor.needs_context -> NEEDS_CLARIFICATION
+  |- executor.failed -> RETRYABLE_FAILED
+  |- executor.timed_out -> RETRYABLE_FAILED
+  `- scope.changed | user.cancelled -> CANCELLING
+
+VERIFYING
+  |- evidence.qualified -> AWAITING_APPROVAL
+  |- evidence.incomplete -> WORKING
+  |- evidence.invalid -> REMEDIATING
+  |- evidence.stale -> WORKING
+  `- review.failed -> REMEDIATING
+
+AWAITING_APPROVAL
+  |- approval.granted + next_phase.exists -> NEXT_STAGE.WORKING
+  |- approval.granted + final_acceptance -> COMPLETING
+  |- approval.rejected -> REMEDIATING
+  |- changes.requested -> REMEDIATING
+  |- upstream.changed -> INVALIDATING
+  `- no.response -> AWAITING_APPROVAL
+
+NEEDS_CLARIFICATION
+  |- clarification.received -> WORKING
+  |- clarification.changes_scope -> INVALIDATING
+  `- user.paused -> PAUSED
+
+RETRYABLE_FAILED
+  |- retry.requested -> WORKING
+  |- workaround.selected -> WORKING
+  |- dependency.unavailable -> BLOCKED
+  `- workflow.cancelled -> CANCELLING
+
+REMEDIATING
+  |- remediation.completed -> VERIFYING
+  |- root_cause.upstream -> INVALIDATING
+  `- remediation.failed -> RETRYABLE_FAILED
+```
+
+A child return event can move only from `EXECUTOR_RUNNING` to `VERIFYING`. A child recommendation, local approval, passing test, or completed checklist cannot transition the parent to the next phase.
+
+## Transition Contract
+
+Every transition definition contains:
+
+| Field | Requirement |
+|---|---|
+| Event | Observable event that requests the transition |
+| Source | Exact lifecycle, stage, and sub-state |
+| Guard | Predicate that must be true |
+| Effects | Artifacts, executor actions, ledger entries, or invalidations produced |
+| Destination | Exact next state |
+| Recovery | State and action used when the effect fails |
+
+Advancing to the next phase requires all of the following:
+
+- required activity was performed;
+- formal artifact exists;
+- evidence satisfies the phase-specific evidence contract;
+- evidence provenance and freshness are known;
+- accountable stakeholder explicitly approved the bounded decision;
+- no upstream artifact or required evidence is `SUPERSEDED` or stale;
+- no load-bearing executor or review finding remains unresolved.
+
+An artifact is a container, not proof by itself. A screenshot, test report, preview, or document qualifies only when its scope, source, target runtime, relevant configuration, and freshness satisfy the active gate.
+
+## Phase Gates and Formal Artifacts
+
+| Phase | Formal artifacts | Gate decision |
 |---|---|---|
 | `INTAKE` | `00-intake.md`, `01-outcome.md` | Value goal, audience, scope, facts, and assumptions approved |
-| `CONTENT` | `02-content-design.md` | Journey, surfaces, data semantics, states, and workflow approved |
-| `CAPABILITY` | `technical-capability.md` | Concern inventory, evidence grades, `Reuse / Adopt / Build`, candidates, and technical approach approved |
-| `VISUAL_DIRECTION` | `03-visual-brief.md`, design authority, rendered preview or screenshots | Visual direction is reviewable and approved |
-| `REPRESENTATIVE_V0` | `04-v0.md`, runnable preview, runtime evidence | High-risk representative slice passes checks and is approved |
-| `SCALE_DELIVERY` | `05-scale-plan.md`, `06-acceptance.md` | Reuse boundaries, QA evidence, review package, and readiness approval complete |
+| `CONTENT` | `02-content-design.md` | Journey, surface responsibilities, data semantics, states, and workflow approved |
+| `TECHNICAL_BASELINE` | `technical-capability.md` | Target runtime, integration impact, concern inventory, and `Reuse / Adopt / Build` decisions approved |
+| `VISUAL_DIRECTION` | `03-visual-brief.md`, design authority, rendered visual evidence | Complete visual and interaction direction approved |
+| `COMPOSITION_PROOF` | `composition-proof.md`, runnable representative composition, whole-experience evidence | Complete composition works in the target runtime and is approved for behavior implementation |
+| `REPRESENTATIVE_V0` | `04-v0.md`, runnable core journey, behavior and state evidence | Representative workflow and material states approved for replication |
+| `SCALE_DELIVERY` | `05-scale-plan.md`, `06-acceptance.md` | Remaining surfaces, reuse boundaries, QA evidence, and readiness approved |
 
-An approved upstream change invalidates downstream decisions without deleting their files:
+No phase may be skipped because a downstream-looking artifact already exists. The artifact must be reconciled against the current upstream decisions and current evidence contract.
 
-| Changed stage | Mark superseded |
-|---|---|
-| Outcome | Content, Capability, Visual, V0, Scale |
-| Content | Capability, Visual, V0, Scale |
-| Capability | Visual, V0, Scale |
-| Visual direction | V0, Scale |
-| Representative V0 | Scale and acceptance |
+## Technical Baseline Authority
 
-The orchestrator returns to the owning stage and records the invalidation in `progress.md`. It never silently reuses a downstream artifact whose inputs are superseded.
+`TECHNICAL_BASELINE` combines two related proofs without turning a project-specific host audit into a universal checklist.
 
-## Authority Model
+### Target Runtime and Integration Impact
 
-The workflow distinguishes four authorities:
+For every implementation-bound V0, record the material target-runtime contract and incumbent integration risks. Applicable concerns include:
 
-| Authority | Question answered | Primary artifact |
-|---|---|---|
-| Product/outcome | Why, for whom, and what success means | Existing intake and outcome artifacts |
-| Content | What each surface communicates or enables | `02-content-design.md` |
-| Technical capability | Which proven capabilities will carry the workflow | `technical-capability.md` |
-| Visual | How the approved content and capabilities should be understood and operated, proven by a reviewable visual artifact | `03-visual-brief.md`, project design authority, and preview/screenshots |
+- application and rendering model;
+- canonical navigation and route behavior;
+- layout and application-shell ownership;
+- styling, tokens, resets, themes, and style precedence;
+- authentication, permission, and redirect context;
+- legacy coexistence, migration, isolation, and rollback boundaries;
+- build, deployment, review runtime, device, and input constraints;
+- evidence invalidation triggers when runtime configuration or code changes.
 
-`technical-capability.md` is independent rather than embedded in content or visual artifacts. Its stable unnumbered name avoids renumbering existing project artifacts and makes it reusable across later stages.
+Projects decide the concrete values. The reusable skill never hard-codes a route, viewport, CSS rule, product component, or domain label.
 
-## Capability Inventory
+### Capability Architecture
 
-Before content approval can enable visual production, inventory these concerns when material to the confirmed workflow:
+Inventory material concerns individually:
 
 - application framework and rendering model;
 - styling and tokens;
 - accessible UI primitives;
-- operations/admin workflow components;
+- domain or operations workflow components;
 - navigation and application shell;
-- tables and data grids;
-- forms and validation;
-- charts, maps, and other domain visualization;
+- tables, forms, validation, charts, maps, and specialized surfaces;
 - data adapters, state, and mock/API boundaries;
 - authentication, permissions, and workflow states;
-- unit, interaction, end-to-end, and visual testing;
-- customer review runtime and deployment constraints.
+- unit, interaction, end-to-end, visual, and review-runtime testing.
 
-Each concern receives an evidence grade:
+Each concern is graded `Absent`, `Present but weak`, or `Established and capable`, then receives a `Reuse`, `Adopt`, or `Build` decision. Package presence, utility CSS, repeated ad hoc controls, or a few existing pages do not prove a capable system. `Build` requires concrete incompatibility with viable reuse and adoption candidates.
 
-| Grade | Meaning |
+Candidate routing is conditional. For example, a complex React back-office workflow must evaluate Ant Design Pro Components, but a Vue workflow, a simple settings surface, or an established capable alternative follows its own evidence. Candidate evaluation does not force selection.
+
+## Visual Direction and Composition Proof
+
+Text is not visual evidence. A written specification, component inventory, or brainstorming summary cannot satisfy `VISUAL_DIRECTION` without a rendered artifact that communicates the complete intended experience.
+
+Visual approval authorizes only `COMPOSITION_PROOF`. It does not authorize full behavior implementation or multi-surface replication.
+
+`COMPOSITION_PROOF` is the first implementation unit. It must:
+
+- represent one complete surface or journey frame rather than isolated components;
+- run in the project-defined target runtime and integration context;
+- include the application frame, hierarchy, context, actions, and primary content needed to judge the experience;
+- use only the minimum fixtures and behavior needed to expose the complete composition;
+- provide whole-experience evidence at project-defined review conditions;
+- demonstrate that a user can understand where they are, what matters, and what they can do next;
+- receive explicit approval before deeper state, adapter, behavior, or replication work expands.
+
+For an operations interface this may be a complete application shell and representative work surface. For a dashboard, H5 flow, mini program, editor, or native application, the project defines the equivalent complete composition. The skill prescribes the proof obligation, not a universal layout.
+
+## Experience Ownership and Work Decomposition
+
+`solution-to-frontend` owns process state. One named `Experience Integration Owner` owns the coherence of the complete experience; the parent agent assumes this role unless the project names another accountable owner.
+
+Before `COMPOSITION_PROOF` approval:
+
+- the complete representative composition is the acceptance unit;
+- visually coupled pieces are not dispatched as independently approvable modules;
+- parallel child implementation is prohibited;
+- local component, adapter, and state completion cannot substitute for whole-experience review.
+
+After approval, implementation tasks are organized by vertical experience slice or complete workflow outcome where possible. Infrastructure tasks may support a slice, but they are not the user-facing acceptance unit. Every material integration returns to whole-experience review.
+
+## Failure Routing
+
+Review failures return to the earliest authority that owns the root cause:
+
+| Failure | Return state |
 |---|---|
-| Absent | No relevant capability is evidenced |
-| Present but weak | Ad hoc, incomplete, duplicated, untested, or unable to cover the confirmed workflow |
-| Established and capable | Shared, evidenced, maintained, and sufficient for the confirmed workflow |
+| Wrong value goal, audience, or scope | `INTAKE.REMEDIATING` |
+| Wrong journey, content, data meaning, state, or workflow | `CONTENT.REMEDIATING` |
+| Wrong runtime contract, integration boundary, or capability choice | `TECHNICAL_BASELINE.REMEDIATING` |
+| Wrong visual hierarchy, interaction direction, or visual language | `VISUAL_DIRECTION.REMEDIATING` |
+| Whole composition or target-runtime integration fails | `COMPOSITION_PROOF.REMEDIATING` |
+| Core behavior, recovery, permission, or material state fails | `REPRESENTATIVE_V0.REMEDIATING` |
+| Replication, regression, packaging, or final acceptance fails | `SCALE_DELIVERY.REMEDIATING` |
 
-Package presence alone is not capability evidence. A framework, utility CSS library, a few custom pages, or repeated ad hoc controls does not prove that a component or workflow system is established and capable.
+Use `superpowers:systematic-debugging` after a test, review, or runtime failure. Repeated local remediation that reveals cross-stage assumptions triggers `root_cause.upstream`, not another local patch.
 
-## Reuse / Adopt / Build Decision
+## Invalidation Propagation
 
-Every material concern receives one decision:
+An approved upstream change enters `INVALIDATING`; it does not silently edit downstream artifacts in place.
 
-- `Reuse`: the incumbent capability is established, capable, and compatible with the confirmed workflow.
-- `Adopt`: a mature ecosystem capability fits better than extending the incumbent implementation.
-- `Build`: the workflow is sufficiently specialized that incumbent and mature candidates have concrete incompatibilities.
+| Changed authority | Mark `SUPERSEDED` |
+|---|---|
+| Intake/outcome | Content, technical baseline, visual direction, composition proof, V0, scale and acceptance |
+| Content | Technical baseline, visual direction, composition proof, V0, scale and acceptance |
+| Technical baseline | Visual direction where affected, composition proof, V0, scale and acceptance |
+| Visual direction | Composition proof, V0, scale and acceptance |
+| Composition proof | V0, scale and acceptance |
+| Representative V0 | Scale and acceptance |
 
-Custom construction is a positive architecture decision, not the default produced by missing evidence. A `Build` decision must name the incompatibility that prevents `Reuse` or `Adopt`.
+Before invalidation mutates artifacts, the parent requests cancellation of affected running executors. If cancellation fails, the workflow enters `BLOCKED(cancellation)` rather than allowing stale work to merge.
 
-The project artifact uses this required shape:
+Evidence can also become stale without a formal decision change. Each project-generated acceptance contract names material freshness triggers, such as a relevant runtime configuration, application frame, selected system, or reviewed build changing. Stale evidence returns to `VERIFYING` or `WORKING`; it does not automatically invalidate unrelated upstream decisions.
 
-```markdown
-## Technical Capability Decision
+## Companion Skill Semantics
 
-| Concern | Required capability | Incumbent evidence and grade | Reuse/Adopt/Build | Candidates compared | Selected solution | Rationale and boundary |
-|---|---|---|---|---|---|---|
-```
+Superpowers supplies local engineering protocols; Impeccable supplies bounded visual execution and review. Neither owns the parent lifecycle.
 
-The artifact also records review runtime, migration cost, compatibility, accessibility, rendering/SSR constraints, bundle implications, theming, production reuse, rejected alternatives, approver, and approval date.
+- `impeccable:init` may establish product design context inside the active phase.
+- Impeccable visual generation, critique, audit, and polish return evidence to the parent.
+- `superpowers:test-driven-development` governs approved behavior changes.
+- `superpowers:systematic-debugging` governs unexpected failures.
+- `superpowers:verification-before-completion` verifies claims with fresh evidence.
+- Inside an active `solution-to-frontend` delivery, `superpowers:writing-plans` is allowed only after `REPRESENTATIVE_V0` approval, for `SCALE_DELIVERY`. This does not prevent maintainers from writing an implementation plan for the skill repository itself after this design specification is approved.
+- `superpowers:subagent-driven-development` may execute an approved plan, but its task completion and code-review gates do not replace parent composition or V0 gates.
 
-## Domain-Matched Candidate Routing
+If generic `superpowers:brainstorming` recommends `writing-plans`, its local terminal state is treated as `executor.returned`. The parent moves to `VERIFYING`, evaluates its own gate, and ignores the recommendation when visual, composition, or V0 evidence is missing.
 
-Candidate evaluation is conditional on observable workflow and platform evidence.
+Unavailable companion skills use the documented fallback. `degraded` is a disclosure, not a passing state. The fallback must still satisfy the parent evidence contract, and material limitations require explicit stakeholder disposition.
 
-For React back-office workflows containing material list, search, filter, detail, edit, permission, batch-action, or approval behavior, Ant Design Pro Components is a required candidate. Evaluation must cover relevant components such as ProTable, ProForm, ProDescriptions, ProLayout, and ProCard.
+## Temporary Progress and Recovery
 
-This rule does not force selection:
+`progress.md` is workspace-local temporary state, created from `assets/progress-template.md`, and never becomes the source of truth for approved facts.
 
-- an established Ant Design admin surface normally reuses Ant Design and evaluates incremental Pro Components adoption;
-- an established shadcn-based table, form, and shell system compares migration and coexistence cost before adopting Ant Design;
-- a Vue application does not evaluate the React-only Pro Components implementation;
-- two simple settings forms do not trigger a large admin framework solely because the product is called a back office;
-- a specialized canvas or editor may reuse a mature admin shell while building the domain-specific editing surface.
+It records:
 
-Tailwind alone is never a reason to reject Pro Components. Rejection requires a concrete incompatibility or an established capable alternative.
+- workflow lifecycle;
+- current phase and stage sub-state;
+- next expected event and exact resume action;
+- formal artifacts with independent validity and approval references;
+- evidence status with source, scope, runtime, freshness, and limitations;
+- executor runs with identity, status, outputs, retry count, and cancellation state;
+- blockers, clarification requests, and remediation attempts;
+- tentative decisions and their formal promotion targets;
+- invalidation events and downstream artifacts marked `SUPERSEDED`.
 
-## Stage Gates
+At startup, the parent reconciles the ledger against formal artifacts, git/workspace state, running executors where observable, and current evidence. It never trusts a claimed stage solely because it appears in `progress.md`.
 
-The main skill adds this non-negotiable gate:
+Completion first reconciles every tentative decision, approval, artifact, limitation, and acceptance item. Only then does cleanup delete `progress.md`. Cleanup failure produces `CLEANUP_FAILED`, preserving a recoverable record rather than falsely reporting `COMPLETE`.
 
-```text
-No approved technical capability architecture -> no visual ideation or V0 implementation
-No reviewable visual artifact                  -> no visual approval
-No approved representative V0                 -> no scale implementation plan
-```
+## Test Architecture
 
-The content stage defines workflow capabilities and material states. The technical capability stage then evaluates implementation approaches. The visual stage consumes the approved decision and may refine visual integration, but it may not silently reopen or replace the selected component architecture.
+Skill tests follow three layers so reusable policy does not absorb one project's literals.
 
-Before the representative V0 is drawn, compare the applicable approaches:
+### Core Workflow Invariants
 
-1. Extend the incumbent component system.
-2. Adopt a domain-matched mature system.
-3. Build project-specific components.
+These apply to every implementation-bound workflow:
 
-Only applicable approaches must be evaluated; a platform-incompatible candidate is excluded with evidence. The comparison records compatibility, reuse, accessibility, rendering/SSR, bundle, theming, migration, and production-reuse trade-offs. The accountable stakeholder approves the selected approach before visual production.
+- child completion returns to parent verification and cannot advance a phase;
+- incomplete, invalid, stale, or unapproved evidence blocks advancement;
+- complete composition evidence is required before deeper implementation expands;
+- isolated success cannot substitute for whole-experience evidence;
+- upstream change stops affected executors and supersedes dependent artifacts;
+- pause, retry, cancellation, recovery, and cleanup preserve consistent state;
+- only successful reconciliation and cleanup produce `COMPLETE`.
 
-Text is not visual evidence. A content matrix, layout description, component inventory, wireframe narrative, brainstorming summary, or written design specification cannot satisfy the visual gate by itself. The gate requires something the stakeholder can inspect as the intended interface: a rendered mockup, browser preview, or equivalent target-platform artifact at representative dimensions. For interaction-heavy work, it must demonstrate the material states and transitions needed to judge the direction.
+### Conditional Stack Scenarios
 
-The visual direction gate and representative V0 gate remain distinct. Direction approval authorizes building the selected high-risk slice; V0 approval authorizes replication and scale planning.
+These load only when observable predicates match:
 
-## Parent Workflow Sovereignty
+- an existing framework without a capable component system still triggers capability evaluation;
+- a complex React operations workflow evaluates Pro Components;
+- an established capable alternative compares migration and coexistence cost;
+- platform-incompatible or disproportionate candidates are excluded with evidence;
+- selected component systems trigger their relevant integration checks without making those checks universal.
 
-`solution-to-frontend` owns stage state and gate transitions. Companion skills execute bounded work inside the active stage; they never decide that the parent workflow may advance.
+### Project-Generated Acceptance Checks
 
-If a host invokes `superpowers:brainstorming` despite this workflow's adapter policy, completion of that skill means only that its local discovery/specification task is complete and control returns to `solution-to-frontend`. It does not imply that visual direction, visual evidence, the representative V0, or customer-review readiness is approved.
+Each project records concrete values in its formal artifacts, such as canonical route, review runtime, viewport, device, authentication state, selected component system, content comprehension criteria, and evidence freshness triggers. Tests validate that these fields exist and are used; the reusable skill does not prescribe their literal values.
 
-After every companion skill returns, the orchestrator re-evaluates the parent gates from concrete artifacts and recorded approvals. A companion skill's recommended next action is advisory and is ignored when it conflicts with the active parent stage.
+## Forward Scenarios
 
-In particular, the generic brainstorming transition to `superpowers:writing-plans` is intercepted when visual evidence or V0 approval is missing. The workflow resumes the visual stage, produces the required reviewable artifact, obtains the corresponding approval, and only then advances.
+The edited skill must route at least these scenarios correctly:
 
-## Companion Skill Contract
+| Scenario | Expected behavior |
+|---|---|
+| Written design is approved but no rendered visual evidence exists | Remain in `VISUAL_DIRECTION`; planning is blocked |
+| Rendered direction exists but no complete target-runtime composition exists | Enter or remain in `COMPOSITION_PROOF`; deeper implementation is blocked |
+| Isolated preview passes while the project-defined target runtime fails | Composition evidence is invalid; return to remediation |
+| Local tasks pass but whole-experience evidence is absent | Parent gate remains blocked regardless of task status |
+| Evidence refers to a stale or unidentified build | Return to `WORKING` or `VERIFYING`; approval cannot reuse stale evidence |
+| Whole-experience review fails after downstream work exists | Enter `INVALIDATING`; mark dependent V0 and scale artifacts `SUPERSEDED` |
+| Scope changes while a child executor is running | Cancel affected executor before invalidation and resume at the owning phase |
+| Executor times out | Enter `RETRYABLE_FAILED`; retry must use recorded attempt and workspace evidence |
+| Clarification changes an approved upstream decision | Enter `INVALIDATING`, not local remediation |
+| Formal acceptance succeeds but progress cleanup fails | Enter `CLEANUP_FAILED`, not `COMPLETE` |
+| Complex React operations workflow lacks a capable system | Evaluate Pro Components as a conditional candidate |
+| Platform or scope makes that candidate unsuitable | Exclude it with evidence without changing the global workflow |
 
-Impeccable visual work, approved Superpowers engineering leaf skills, `superpowers:writing-plans`, and V0 implementation consume the approved `technical-capability.md` as an input.
-
-They may explore interaction, composition, and visual direction within its boundaries. They may not replace an approved `Reuse` or `Adopt` decision with custom components without returning to the technical capability gate, recording new evidence, and obtaining approval.
-
-If a companion skill starts before the capability decision exists, the solution workflow pauses it at the technical capability gate rather than allowing unconstrained UI generation.
-
-Superpowers is used as a source of engineering discipline, not as a second parent workflow. Do not compose its meta-workflow or brainstorming state machine into the pre-V0 stages. Use only the named leaf skills at explicit triggers: TDD for behavior changes, systematic debugging after failures, verification before claims, and `writing-plans` only in `SCALE_DELIVERY` after representative V0 approval. The visual stage may maintain a bounded build checklist for the representative slice, but that checklist is not the production or multi-screen implementation plan.
-
-## File Changes
+## Planned File Changes
 
 ### `SKILL.md`
 
-- Replace the single “no frontend stack” condition with an always-run concern inventory.
-- Load `technical-baseline.md` whenever any material concern is absent, weak, or not evidenced.
-- Add the technical capability authority to the stage sequence and non-negotiable gates.
-- Clarify that incumbent conventions are preserved only when established and capable for the confirmed workflow.
-- Require companion skills to consume the approved technical capability artifact.
-- Declare parent workflow sovereignty and re-check parent gates after every companion skill returns.
-- Move `superpowers:writing-plans` from pre-V0 implementation to post-V0 scale/delivery planning.
-- Require reviewable visual evidence rather than accepting textual design output as visual approval.
-- Make `solution-to-frontend` the sole parent orchestrator and state owner.
-- Load, reconcile, update, and clean up temporary `progress.md` according to the state protocol.
-- Treat Superpowers as leaf engineering practices rather than a competing workflow orchestrator.
-
-### `references/technical-baseline.md`
-
-- Expand its applicability beyond greenfield projects.
-- Add the concern inventory, evidence grades, and `Reuse / Adopt / Build` contract.
-- Add domain-matched candidate routing and the React back-office Pro Components evaluation rule.
-- Replace the current baseline record with the required technical capability decision table and approval evidence.
-
-### `references/content-design.md`
-
-- Require content design to identify the workflow capabilities that the technical stage must satisfy.
-- Make an approved technical capability artifact a prerequisite for visual production when implementation is in scope.
-
-### `references/visual-v0.md`
-
-- Require the approved technical capability artifact before visual ideation.
-- Add the implementation-approach comparison and approval check.
-- Prevent visual work from silently substituting custom architecture.
-- Define qualifying visual evidence and keep visual-direction approval separate from representative-V0 approval.
-- Block implementation planning until the representative V0 is approved.
-
-### `references/project-artifacts.md`
-
-- Add `technical-capability.md` to the artifact map.
-- Define it as the technical capability authority without renumbering existing artifacts.
-- Mark `progress.md` as workspace-local temporary state, not a formal artifact; point to `assets/progress-template.md`.
-
-### `assets/progress-template.md`
-
-- Define the structured temporary state fields and recovery sections.
-- Require tentative decisions to name a formal promotion target.
+- Rebuild as a thin parent coordinator over lifecycle, phase routing, evidence gates, and child-return semantics.
+- Distinguish phase flow from state-machine state.
+- Load and reconcile `progress.md` before acting.
+- Make `TECHNICAL_BASELINE` and `COMPOSITION_PROOF` hard authorization boundaries.
+- Name the parent as default experience integration owner.
 
 ### `references/workflow-protocol.md`
 
-- Define the parent-owned state machine, Activity/Artifact/Commitment transition rule, invalidation rules, and cleanup gate.
-- Define child-executor return semantics and forbid child-driven stage transitions.
+- Define lifecycle states, stage sub-states, events, guards, effects, recovery, and invalidation.
+- Define executor cancellation and child-return behavior.
 
-### `scripts/validate-progress.mjs`
+### `assets/progress-template.md` and validator
 
-- Validate progress frontmatter, stage names, statuses, promotion targets, and transition prerequisites when the runtime supports local scripts.
-- Keep Markdown instructions as the portable fallback when scripts are unavailable.
+- Store the six orthogonal state dimensions.
+- Validate legal state combinations, required recovery targets, executor attempts, evidence provenance, promotion targets, and cleanup conditions.
 
-## Forward Tests
+### Stage playbooks
 
-The edited skill must route these scenarios as follows:
+- Give every phase explicit inputs, activity, evidence contract, approval, failure routing, and next legal transition.
+- Add dedicated `technical-baseline` and `composition-proof` playbooks.
 
-| Scenario | Expected decision behavior |
-|---|---|
-| Next.js and Tailwind, no component library, complex admin workflow | Detect missing domain component capability; explicitly evaluate and normally recommend Pro Components |
-| Existing Ant Design admin | Reuse Ant Design; evaluate incremental Pro Components adoption |
-| Mature shadcn tables, forms, and shell | Treat as capability evidence; compare migration/coexistence cost and do not mechanically introduce Ant Design |
-| Vue admin | Exclude React Pro Components as platform-incompatible; evaluate Vue-matched mature systems |
-| Two simple settings forms | Avoid over-adopting an admin framework; reuse capable primitives or adopt only the narrow capability needed |
-| Highly customized canvas/editor | Separate generic admin shell from the specialized editor; reuse/adopt the shell and permit evidence-backed custom core UI |
-| Brainstorming produces a written UI specification and recommends `writing-plans`, but no design artifact exists | Return control to the parent visual stage; create reviewable visual evidence and obtain approval before planning |
-| Workflow is interrupted with `progress.md` present and formal artifacts partially complete | Reconcile evidence, resume at the owning stage, and delete `progress.md` only after formal acceptance is complete |
+### Capability and integration policies
 
-Regression checks must also verify that an existing framework or Tailwind alone cannot satisfy the component-system concern, that no visual ideation begins without the approved capability decision, and that a child skill's local completion cannot advance the parent stage.
+- Preserve concern-by-concern `Reuse / Adopt / Build` and conditional candidate routing.
+- Add target-runtime, integration-impact, evidence-freshness, and project-generated acceptance contracts.
+
+### Companion adapters
+
+- Treat child completion as a parent verification event.
+- Keep Superpowers leaf protocols and Impeccable visual work bounded by the active phase.
+
+### Regression tests
+
+- Test legal and illegal transitions, recovery, invalidation, cancellation, retry, cleanup, and child-return behavior.
+- Separate core invariants, conditional stack scenarios, and project-generated acceptance fixtures.
+- Use the observed implementation failure as a baseline pressure scenario without copying its project literals into global policy.
 
 ## Acceptance Criteria
 
-- Every implementation-bound V0 inventories material frontend capabilities by concern.
-- Missing or weak concerns route to `technical-baseline.md` even when a framework and styling system exist.
-- Every material concern has evidence, a grade, a `Reuse / Adopt / Build` decision, and a selected boundary.
-- React complex admin workflows cannot skip Pro Components evaluation.
-- Platform-incompatible or disproportionate solutions are not recommended mechanically.
-- Existing conventions are preserved only when established and capable.
-- Technical selection is approved before visual ideation and implementation.
-- Companion skills receive and respect the approved technical capability decision.
-- Written design material cannot substitute for a rendered, reviewable visual artifact.
-- `superpowers:writing-plans` cannot run before representative V0 approval.
-- `progress.md` is removed only after the formal acceptance package is complete.
-- All eight forward tests produce the expected routing behavior.
+- The happy-path sequence is explicitly distinguished from the state machine.
+- Workflow lifecycle, stage execution, artifact validity, evidence status, approval status, and executor state are represented independently.
+- Every transition has an event, source, guard, effects, destination, and recovery path.
+- `TECHNICAL_BASELINE` covers target-runtime integration and capability architecture without hard-coding project values.
+- `COMPOSITION_PROOF` blocks deeper behavior and replication until a complete representative composition passes in the project-defined runtime.
+- One experience integration owner is accountable for whole-experience coherence.
+- Child completion cannot advance the parent phase.
+- Review rejection, clarification, retryable failure, pause, cancellation, invalidation, recovery, and cleanup failure have defined semantics.
+- Upstream changes cancel affected executors before superseding dependent artifacts.
+- Evidence provenance and freshness are required for approval.
+- Superpowers remains a local engineering protocol, not the parent workflow.
+- `progress.md` is retained for interruption and failure and deleted only after successful completion reconciliation.
+- Tests distinguish core invariants, conditional policies, and project-generated acceptance values.
+- The existing implementation plan is not executed until it is rewritten against this specification and explicitly reviewed.

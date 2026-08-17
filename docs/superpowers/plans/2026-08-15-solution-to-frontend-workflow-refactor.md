@@ -1,5 +1,7 @@
 # Solution-to-Frontend Workflow Refactor Implementation Plan
 
+> **Status: SUPERSEDED. Do not execute this plan.** The approved design was revised on 2026-08-17 to use a layered, evidence-gated state machine with `TECHNICAL_BASELINE` and `COMPOSITION_PROOF`. Rewrite this plan only after the revised specification receives written review approval.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Refactor `solution-to-frontend` into a parent-owned, evidence-gated workflow with temporary `progress.md` state, explicit technical capability decisions, reviewable visual gates, and deterministic child-skill boundaries.
